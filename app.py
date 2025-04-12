@@ -74,12 +74,14 @@ class TestExtractionResponse(BaseModel):
 
 
 # Helper LLM Calls - These are supposed to be the tools of the agent. In a finished app they will have to be setup as real tools that the agent can access.
-def classify_document_type(extraction_task: str) -> str:
+def classify_document_type(extraction_task: str, api_key: str) -> str:
     """
     Call the OpenAI Responses API with the doc_classification.yaml prompt.
     If more than 99% sure, returns 'invoice', 'email', 'support ticket', 'legal doc'
     Otherwise returns 'unknown'.
     """
+    openai.api_key = api_key.strip()
+
     input_messages = [
         {
             "role": "system",
@@ -139,12 +141,15 @@ def generate_final_prompt(api_key: str, extraction_task: str) -> str:
 def domain_check_llm_call(
     doc_type: str,
     extraction_prompt: str,
-    user_request: str
+    user_request: str,
+    api_key: str
 ) -> (str, str):
     """
     Calls the specialized domain check (which can also fix the prompt).
     Returns (check_result, check_reason, adjusted_prompt). These parameters will be then useful during any debugging process.
     """
+    openai.api_key = api_key.strip()
+
     if doc_type == "invoice":
         check_prompt = INVOICE_CHECK_TEXT
     elif doc_type == "email":
@@ -228,7 +233,7 @@ def generate_prompt_endpoint(payload: GeneratePromptRequest):
     #     identified_doc_type = payload.doc_type.lower()
     # else:
         # call classification logic
-    classification = classify_document_type(payload.extraction_task)
+    classification = classify_document_type(payload.extraction_task, payload.api_key)
     identified_doc_type = classification
 
     # B) Generate final prompt
@@ -246,7 +251,8 @@ def generate_prompt_endpoint(payload: GeneratePromptRequest):
         (check_result, check_reason, possible_fix) = domain_check_llm_call(
             doc_type=identified_doc_type,
             extraction_prompt=final_prompt,
-            user_request=payload.extraction_task
+            user_request=payload.extraction_task,
+            api_key = payload.api_key
         )
 
         # If "Fail", adopt the partially fixed prompt
