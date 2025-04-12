@@ -1,7 +1,7 @@
 import os
 import yaml
 import json
-from typing import Optional
+from typing import Optional, List
 from fastapi import FastAPI, Body, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -294,6 +294,19 @@ def test_extraction_endpoint(payload: TestExtractionRequest):
     """
     extraction_result = test_extraction_llm_call(payload.final_prompt, payload.file_content)
     return TestExtractionResponse(extraction_result=extraction_result)
+
+
+# Endpoint to list all available routes
+@app.get("/", response_model=List[dict])
+def get_all_routes():
+    routes = []
+    for route in app.routes:
+        routes.append({
+            "path": route.path,
+            "name": route.name,
+            "methods": list(route.methods)
+        })
+    return routes
 
 
 # if __name__ == "__main__":
