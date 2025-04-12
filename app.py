@@ -22,7 +22,7 @@ app = FastAPI(title="Data Extraction Prompt Generator", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # For making some local tests
+    allow_origins=["https://promptgenerator-challenge.netlify.app"],  # For making some local tests
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
